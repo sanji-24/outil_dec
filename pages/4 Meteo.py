@@ -193,3 +193,64 @@ plt.legend()
 plt.xticks(rotation=45)
 st.pyplot(plt)
 
+##________________________________________________________________##
+
+
+# Entraînement du modèle de régression linéaire
+def train_model(data):
+    # Nettoyage des données en supprimant les lignes avec des valeurs manquantes dans la variable cible
+    data_cleaned = data.dropna(subset=['Température (°C)', 'Annee_Mois_Jour'])
+    imputer = SimpleImputer(strategy='mean')
+    X = pd.to_datetime(data_cleaned['Annee_Mois_Jour']).astype('int64') // 10**9  # Conversion de la date en timestamp UNIX
+    X = X.values.reshape(-1, 1)  # Reshape pour l'entraînement du modèle
+    y = data_cleaned['Température (°C)']
+    X_imputed = imputer.fit_transform(X)
+    model = LinearRegression()
+    model.fit(X_imputed, y)
+    return model
+
+# Chargement des données
+data = load_data()
+
+# Entraînement du modèle
+model = train_model(data)
+
+# Titre de l'application
+st.title('Prédiction de la température en fonction du temps')
+
+# Sélection de la date
+date_input = st.date_input('Sélectionnez une date')
+
+# Conversion de la date en timestamp UNIX
+timestamp = pd.Timestamp(date_input).timestamp()
+
+# Prédiction de la température
+predicted_temperature = model.predict([[timestamp]])
+
+# Affichage de la température prédite
+st.write('La température prédite est :', round(predicted_temperature[0], 2), '°C')
+
+# Préparation des données pour le graphique
+X = pd.to_datetime(data['Annee_Mois_Jour']).astype('int64') // 10**9
+y = data['Température (°C)']
+
+# Création du graphique
+fig, ax = plt.subplots()
+ax.scatter(X, y, label='Données réelles')
+
+# Régression linéaire
+x_range = np.linspace(X.min(), X.max(), 100)
+y_range = model.predict(x_range.reshape(-1, 1))
+ax.plot(x_range, y_range, color='red', label='Régression linéaire')
+
+# Prédiction
+ax.scatter(timestamp, predicted_temperature, color='green', label='Prédiction')
+
+# Paramètres du graphique
+ax.set_xlabel('Date')
+ax.set_ylabel('Température (°C)')
+ax.set_title('Prédiction de la température en fonction du temps')
+ax.legend()
+
+# Affichage du graphique
+st.pyplot(fig)
