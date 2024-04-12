@@ -1,0 +1,9 @@
+streamlit
+pandas
+plotly
+Pillow
+matplotlib
+seaborn
+numpy
+scikit-learn
+base64
